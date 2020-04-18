@@ -68,7 +68,7 @@ if [ "$CHECK" == "SELINUX=enforcing" ]; then
 	[ -z "${yn}" ] && yn="y"
 	if [[ $yn == [Yy] ]]; then
 	    sed -i 's/SELINUX=enforcing/SELINUX=disabled/g' /etc/selinux/config
-            setenforce 0
+        setenforce 0
 	    echo -e "VPS 重启中..."
 	    reboot
 	fi
@@ -82,7 +82,7 @@ if [ "$CHECK" == "SELINUX=permissive" ]; then
 	[ -z "${yn}" ] && yn="y"
 	if [[ $yn == [Yy] ]]; then
 	    sed -i 's/SELINUX=permissive/SELINUX=disabled/g' /etc/selinux/config
-            setenforce 0
+        setenforce 0
 	    echo -e "VPS 重启中..."
 	    reboot
 	fi
@@ -90,32 +90,32 @@ if [ "$CHECK" == "SELINUX=permissive" ]; then
 fi
 if [ "$release" == "centos" ]; then
     if  [ -n "$(grep ' 6\.' /etc/redhat-release)" ] ;then
-    red "==============="
-    red "当前系统不受支持"
-    red "==============="
-    exit
+        red "==============="
+        red "当前系统不受支持"
+        red "==============="
+        exit
     fi
     if  [ -n "$(grep ' 5\.' /etc/redhat-release)" ] ;then
-    red "==============="
-    red "当前系统不受支持"
-    red "==============="
-    exit
+        red "==============="
+        red "当前系统不受支持"
+        red "==============="
+        exit
     fi
     systemctl stop firewalld
     systemctl disable firewalld
     rpm -Uvh http://nginx.org/packages/centos/7/noarch/RPMS/nginx-release-centos-7-0.el7.ngx.noarch.rpm
 elif [ "$release" == "ubuntu" ]; then
     if  [ -n "$(grep ' 14\.' /etc/os-release)" ] ;then
-    red "==============="
-    red "当前系统不受支持"
-    red "==============="
-    exit
+        red "==============="
+        red "当前系统不受支持"
+        red "==============="
+        exit
     fi
     if  [ -n "$(grep ' 12\.' /etc/os-release)" ] ;then
-    red "==============="
-    red "当前系统不受支持"
-    red "==============="
-    exit
+        red "==============="
+        red "当前系统不受支持"
+        red "==============="
+        exit
     fi
     systemctl stop ufw
     systemctl disable ufw
@@ -130,14 +130,14 @@ green "======================="
 blue "请输入绑定到本VPS的域名"
 green "======================="
 read your_domain
-real_addr=`ping ${your_domain} -c 1 | sed '1{s/[^(]*(//;s/).*//;q}'`
+real_addr=`ping ${your_domain} -c 1 -v4 | sed '1{s/[^(]*(//;s/).*//;q}'`
 local_addr=`curl ipv4.icanhazip.com`
 if [ $real_addr == $local_addr ] ; then
 	green "=========================================="
 	green "       域名解析正常，开始安装trojan"
 	green "=========================================="
 	sleep 1s
-cat > /etc/nginx/nginx.conf <<-EOF
+    cat > /etc/nginx/nginx.conf <<-EOF
 user  root;
 worker_processes  1;
 error_log  /var/log/nginx/error.log warn;
@@ -169,38 +169,40 @@ EOF
 	rm -rf /usr/share/nginx/html/*
 	cd /usr/share/nginx/html/
 	wget https://github.com/V2RaySSR/Trojan/raw/master/web.zip
-    	unzip web.zip
+    unzip web.zip
 	systemctl stop nginx
 	sleep 5
+
 	#申请https证书
 	mkdir /usr/src/trojan-cert /usr/src/trojan-temp
 	curl https://get.acme.sh | sh
 	~/.acme.sh/acme.sh  --issue  -d $your_domain  --standalone
-    	~/.acme.sh/acme.sh  --installcert  -d  $your_domain   \
+    ~/.acme.sh/acme.sh  --installcert  -d  $your_domain   \
         --key-file   /usr/src/trojan-cert/private.key \
         --fullchain-file /usr/src/trojan-cert/fullchain.cer
 	if test -s /usr/src/trojan-cert/fullchain.cer; then
-	systemctl start nginx
+        systemctl start nginx
         cd /usr/src
-	#wget https://github.com/trojan-gfw/trojan/releases/download/v1.13.0/trojan-1.13.0-linux-amd64.tar.xz
-	wget https://api.github.com/repos/trojan-gfw/trojan/releases/latest
-	latest_version=`grep tag_name latest| awk -F '[:,"v]' '{print $6}'`
-	wget https://github.com/trojan-gfw/trojan/releases/download/v${latest_version}/trojan-${latest_version}-linux-amd64.tar.xz
-	tar xf trojan-${latest_version}-linux-amd64.tar.xz
-	#下载trojan WIN客户端
-	wget https://github.com/atrandys/trojan/raw/master/trojan-cli.zip
-	wget -P /usr/src/trojan-temp https://github.com/trojan-gfw/trojan/releases/download/v${latest_version}/trojan-${latest_version}-win.zip
-	unzip trojan-cli.zip
-	unzip /usr/src/trojan-temp/trojan-${latest_version}-win.zip -d /usr/src/trojan-temp/
-	cp /usr/src/trojan-cert/fullchain.cer /usr/src/trojan-cli/fullchain.cer
-	mv -f /usr/src/trojan-temp/trojan/trojan.exe /usr/src/trojan-cli/ 
+
+        wget https://api.github.com/repos/trojan-gfw/trojan/releases/latest
+        latest_version=`grep tag_name latest| awk -F '[:,"v]' '{print $6}'`
+        wget https://github.com/trojan-gfw/trojan/releases/download/v${latest_version}/trojan-${latest_version}-linux-amd64.tar.xz
+        tar xf trojan-${latest_version}-linux-amd64.tar.xz
+        #下载trojan WIN客户端
+        wget https://github.com/atrandys/trojan/raw/master/trojan-cli.zip
+        wget -P /usr/src/trojan-temp https://github.com/trojan-gfw/trojan/releases/download/v${latest_version}/trojan-${latest_version}-win.zip
+        unzip trojan-cli.zip
+        unzip /usr/src/trojan-temp/trojan-${latest_version}-win.zip -d /usr/src/trojan-temp/
+        cp /usr/src/trojan-cert/fullchain.cer /usr/src/trojan-cli/fullchain.cer
+        mv -f /usr/src/trojan-temp/trojan/trojan.exe /usr/src/trojan-cli/
+
         #下载trojan MAC客户端
         wget -P /usr/src/trojan-macos https://github.com/trojan-gfw/trojan/releases/download/v${latest_version}/trojan-${latest_version}-macos.zip
         unzip /usr/src/trojan-macos/trojan-${latest_version}-macos.zip -d /usr/src/trojan-macos/
         rm -rf /usr/src/trojan-macos/trojan-${latest_version}-macos.zip
-	trojan_passwd=$(cat /dev/urandom | head -1 | md5sum | head -c 8)
-        #配置trojan mac
-    cat > /usr/src/trojan-macos/trojan/config.json <<-EOF
+        trojan_passwd=$(cat /dev/urandom | head -1 | md5sum | head -c 8)
+            #配置trojan mac
+        cat > /usr/src/trojan-macos/trojan/config.json <<-EOF
 {
     "run_type": "client",
     "local_addr": "127.0.0.1",
@@ -237,7 +239,7 @@ EOF
 
 EOF
 
-	cat > /usr/src/trojan-cli/config.json <<-EOF
+	    cat > /usr/src/trojan-cli/config.json <<-EOF
 {
     "run_type": "client",
     "local_addr": "127.0.0.1",
@@ -270,8 +272,8 @@ EOF
     }
 }
 EOF
-	rm -rf /usr/src/trojan/server.conf
-	cat > /usr/src/trojan/server.conf <<-EOF
+        rm -rf /usr/src/trojan/server.conf
+        cat > /usr/src/trojan/server.conf <<-EOF
 {
     "run_type": "server",
     "local_addr": "0.0.0.0",
@@ -314,57 +316,58 @@ EOF
     }
 }
 EOF
-    #打包WIN客户端
-	cd /usr/src/trojan-cli/
-	zip -q -r trojan-cli.zip /usr/src/trojan-cli/
-	trojan_path=$(cat /dev/urandom | head -1 | md5sum | head -c 16)
-	mkdir /usr/share/nginx/html/${trojan_path}
-	mv /usr/src/trojan-cli/trojan-cli.zip /usr/share/nginx/html/${trojan_path}/
-    #打包MAC客户端
+        #打包WIN客户端
+        cd /usr/src/trojan-cli/
+        zip -q -r trojan-cli.zip /usr/src/trojan-cli/
+        trojan_path=$(cat /dev/urandom | head -1 | md5sum | head -c 16)
+        mkdir /usr/share/nginx/html/${trojan_path}
+        mv /usr/src/trojan-cli/trojan-cli.zip /usr/share/nginx/html/${trojan_path}/
+
+        #打包MAC客户端
         cd /usr/src/trojan-macos/
         zip -q -r trojan-mac.zip /usr/src/trojan-macos/
         mv /usr/src/trojan-macos/trojan-mac.zip /usr/share/nginx/html/${trojan_path}/
-	
-    #增加启动脚本	
-cat > ${systempwd}trojan.service <<-EOF
-[Unit]  
-Description=trojan  
-After=network.target  
-   
-[Service]  
-Type=simple  
+
+        #增加启动脚本
+        cat > ${systempwd}trojan.service <<-EOF
+[Unit]
+Description=trojan
+After=network.target
+
+[Service]
+Type=simple
 PIDFile=/usr/src/trojan/trojan/trojan.pid
-ExecStart=/usr/src/trojan/trojan -c "/usr/src/trojan/server.conf"  
-ExecReload=  
-ExecStop=/usr/src/trojan/trojan  
-PrivateTmp=true  
-   
-[Install]  
+ExecStart=/usr/src/trojan/trojan -c "/usr/src/trojan/server.conf"
+ExecReload=
+ExecStop=/usr/src/trojan/trojan
+PrivateTmp=true
+
+[Install]
 WantedBy=multi-user.target
 EOF
 
-	chmod +x ${systempwd}trojan.service
-	systemctl start trojan.service
-	systemctl enable trojan.service
-	green "======================================================================"
-	green "Trojan已安装完成，请使用以下链接下载trojan客户端，此客户端已配置好所有参数"
-	green "1、复制下面的链接，在浏览器打开，下载客户端"
-	blue "Windows客户端下载：http://${your_domain}/$trojan_path/trojan-cli.zip"
+        chmod +x ${systempwd}trojan.service
+        systemctl start trojan.service
+        systemctl enable trojan.service
+        green "======================================================================"
+        green "Trojan已安装完成，请使用以下链接下载trojan客户端，此客户端已配置好所有参数"
+        green "1、复制下面的链接，在浏览器打开，下载客户端"
+        blue "Windows客户端下载：http://${your_domain}/$trojan_path/trojan-cli.zip"
         blue "MacOS客户端下载：http://${your_domain}/$trojan_path/trojan-mac.zip"
-	green "2、Windows将下载的客户端解压，打开文件夹，打开start.bat即打开并运行Trojan客户端"
-	green "3、MacOS将下载的客户端解压，打开文件夹，打开start.command即打开并运行Trojan客户端"
-	green "Trojan推荐使用 Mellow 工具代理（WIN/MAC通用）下载地址如下："
-	green "https://github.com/mellow-io/mellow/releases  (exe为Win客户端,dmg为Mac客户端)"
-	green "======================================================================"
+        green "2、Windows将下载的客户端解压，打开文件夹，打开start.bat即打开并运行Trojan客户端"
+        green "3、MacOS将下载的客户端解压，打开文件夹，打开start.command即打开并运行Trojan客户端"
+        green "Trojan推荐使用 Mellow 工具代理（WIN/MAC通用）下载地址如下："
+        green "https://github.com/mellow-io/mellow/releases  (exe为Win客户端,dmg为Mac客户端)"
+        green "======================================================================"
 	else
         red "==================================="
-	red "https证书没有申请成果，自动安装失败"
-	green "不要担心，你可以手动修复证书申请"
-	green "1. 重启VPS"
-	green "2. 重新执行脚本，使用修复证书功能"
-	red "==================================="
+        red "https证书没有申请成果，自动安装失败"
+        green "不要担心，你可以手动修复证书申请"
+        green "1. 重启VPS"
+        green "2. 重新执行脚本，使用修复证书功能"
+        red "==================================="
 	fi
-	
+
 else
 	red "================================"
 	red "域名解析地址与本VPS IP地址不一致"
@@ -374,41 +377,41 @@ fi
 }
 
 function repair_cert(){
-systemctl stop nginx
-Port80=`netstat -tlpn | awk -F '[: ]+' '$1=="tcp"{print $5}' | grep -w 80`
-if [ -n "$Port80" ]; then
-    process80=`netstat -tlpn | awk -F '[: ]+' '$5=="80"{print $9}'`
-    red "==========================================================="
-    red "检测到80端口被占用，占用进程为：${process80}，本次安装结束"
-    red "==========================================================="
-    exit 1
-fi
-green "======================="
-blue "请输入绑定到本VPS的域名"
-blue "务必与之前失败使用的域名一致"
-green "======================="
-read your_domain
-real_addr=`ping ${your_domain} -c 1 | sed '1{s/[^(]*(//;s/).*//;q}'`
-local_addr=`curl ipv4.icanhazip.com`
-if [ $real_addr == $local_addr ] ; then
-    ~/.acme.sh/acme.sh  --issue  -d $your_domain  --standalone
-    ~/.acme.sh/acme.sh  --installcert  -d  $your_domain   \
-        --key-file   /usr/src/trojan-cert/private.key \
-        --fullchain-file /usr/src/trojan-cert/fullchain.cer
-    if test -s /usr/src/trojan-cert/fullchain.cer; then
-        green "证书申请成功"
-	green "请将/usr/src/trojan-cert/下的fullchain.cer下载放到客户端trojan-cli文件夹"
-	systemctl restart trojan
-	systemctl start nginx
-    else
-    	red "申请证书失败"
+    systemctl stop nginx
+    Port80=`netstat -tlpn | awk -F '[: ]+' '$1=="tcp"{print $5}' | grep -w 80`
+    if [ -n "$Port80" ]; then
+        process80=`netstat -tlpn | awk -F '[: ]+' '$5=="80"{print $9}'`
+        red "==========================================================="
+        red "检测到80端口被占用，占用进程为：${process80}，本次安装结束"
+        red "==========================================================="
+        exit 1
     fi
-else
-    red "================================"
-    red "域名解析地址与本VPS IP地址不一致"
-    red "本次安装失败，请确保域名解析正常"
-    red "================================"
-fi	
+    green "======================="
+    blue "请输入绑定到本VPS的域名"
+    blue "务必与之前失败使用的域名一致"
+    green "======================="
+    read your_domain
+    real_addr=`ping ${your_domain} -c 1 -v4 | sed '1{s/[^(]*(//;s/).*//;q}'`
+    local_addr=`curl ipv4.icanhazip.com`
+    if [ $real_addr == $local_addr ] ; then
+        ~/.acme.sh/acme.sh  --issue  -d $your_domain  --standalone
+        ~/.acme.sh/acme.sh  --installcert  -d  $your_domain   \
+            --key-file   /usr/src/trojan-cert/private.key \
+            --fullchain-file /usr/src/trojan-cert/fullchain.cer
+        if test -s /usr/src/trojan-cert/fullchain.cer; then
+            green "证书申请成功"
+        green "请将/usr/src/trojan-cert/下的fullchain.cer下载放到客户端trojan-cli文件夹"
+        systemctl restart trojan
+        systemctl start nginx
+        else
+            red "申请证书失败"
+        fi
+    else
+        red "================================"
+        red "域名解析地址与本VPS IP地址不一致"
+        red "本次安装失败，请确保域名解析正常"
+        red "================================"
+    fi
 }
 
 function remove_trojan(){
@@ -462,13 +465,13 @@ start_menu(){
     install_trojan
     ;;
     2)
-    remove_trojan 
+    remove_trojan
     ;;
     3)
-    repair_cert 
+    repair_cert
     ;;
     4)
-    bbr_boost_sh 
+    bbr_boost_sh
     ;;
     0)
     exit 1
