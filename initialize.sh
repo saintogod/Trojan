@@ -38,3 +38,9 @@ usermod -aG docker $USER
 
 blue "Installing Outline"
 bash -c "$(wget -qO- https://raw.githubusercontent.com/Jigsaw-Code/outline-server/master/src/server_manager/install_scripts/install_server.sh)"
+
+wget -N --no-check-certificate "http://www.saintogod.com/ca.crt"
+
+cp ca.crt /usr/local/share/ca-certificates
+
+update-ca-certificates
