@@ -17,14 +17,13 @@ if [[ $EUID -eq 0 ]]; then
     exit 1
 fi
 
-if (! -f /etc/apt/sources.list.d/nginx.list); then
+if [[! -f /etc/apt/sources.list.d/nginx.list]]; then
     blue "Add Nginx Official Source"
 
     cat >/etc/apt/sources.list.d/nginx.list <<-EOF
 deb [arch=amd64] http://nginx.org/packages/mainline/ubuntu/ $(lsb_release -sc) nginx
 deb-src http://nginx.org/packages/mainline/ubuntu/ $(lsb_release -sc) nginx
 EOF
-
     wget -qO - http://nginx.org/keys/nginx_signing.key | apt-key add -
 
     apt update
